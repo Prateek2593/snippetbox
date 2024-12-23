@@ -22,6 +22,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// initialize a slice containing the paths to the tow files. its important to note that the file containing our base template must be the *first* file in the slice
 	files := []string{
 		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl", // include navigation partial in template file
 		"./ui/html/pages/home.tmpl",
 	}
 
