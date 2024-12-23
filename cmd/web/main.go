@@ -33,24 +33,11 @@ func main() {
 		infoLog:  infoLog,
 	}
 
-	// Use the http.NewServeMux() function to initialize a new servemux, then register the home handler function at the root ("/") path.
-	mux := http.NewServeMux()
-
-	// create a file server which serves files out of the "./ui/static" directory. note that the path given to the http.Dir function is relative to the project root
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-
-	// use the mux.Handle() function to register the file server as the handler for all url paths that start with "/static/". for matching paths, we strip the "/static" prefix before the request reaches the file server
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
-
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before
 	srv := &http.Server{
 		Addr:     *addr,
-		ErrorLog: errorLog, // set the error log to the custom error logger we created earlier
-		Handler:  mux,
+		ErrorLog: errorLog,     // set the error log to the custom error logger we created earlier
+		Handler:  app.routes(), // call the new app.routes() method to get the servemux containing our routes
 	}
 
 	//the value returned from the flag.String() function is a pointer to the flag value, not the value itself. so we need to dereference the pointer(i.e. prefix it with the *symbol) before using it. note that we're using the log.Printf() function to interpolate the address with log message.
