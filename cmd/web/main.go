@@ -7,6 +7,12 @@ import (
 	"os"
 )
 
+// define an application struct to hold the application wide dependencies for the web application. for now we'll only include fields for the two custom loggers, but we'll add more to it as the build progress
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
+
 func main() {
 
 	// define a new command line flag with name addr, a default value of ":4000" and some short help text explaining what the flag controls. the value of the flag will be stored in the addr variable at runtime.
@@ -20,6 +26,13 @@ func main() {
 
 	// create a logger for writing error messages in the same way, but use stderr as the destination and use the log.Lshortfile flag to include the relevant file name and line number
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// create a new instance of our application struct with the custom loggers
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
 	// Use the http.NewServeMux() function to initialize a new servemux, then register the home handler function at the root ("/") path.
 	mux := http.NewServeMux()
 
@@ -29,9 +42,9 @@ func main() {
 	// use the mux.Handle() function to register the file server as the handler for all url paths that start with "/static/". for matching paths, we strip the "/static" prefix before the request reaches the file server
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet/view", app.snippetView)
+	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before
 	srv := &http.Server{

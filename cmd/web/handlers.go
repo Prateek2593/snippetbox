@@ -9,7 +9,8 @@ import (
 
 // define a home handler function which writes a byte slide containing
 // "Hello from Snippetbox!" as the response body
-func home(w http.ResponseWriter, r *http.Request) {
+// change the signature of the home handler so it is defined as a method against *application
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// check if the current request URL path exactly matches"/". If it doesn't, use
 	// the http.NotFount() function to send a 404 response to client
 	// Importantly, we then return from the handler. If we don't return the handler would
@@ -30,6 +31,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// notice that we can pass the slice of file paths as a variadic parameter
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
+		// because the home handler function is now a method against application it can access its fields, including the error logger
+		app.errorLog.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -40,6 +43,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	//use the ExecuteTemplate method to write tehe content of base template as response body
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
+		app.errorLog.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -48,7 +52,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 // add a snippetView handler function
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// extract the value of id parameter from the query string and try to
 	// convert it to an interger using the strconv.Atoi() function. If it can't be converted to an integer, or the value is less than 1, we return a 404 page not fount response.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -61,7 +65,7 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 // Add a snippetCreate handler function
-func snippetCreate(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 
 	// use r.Method to check whether the request is using POST or not
 	if r.Method != "POST" {
