@@ -16,7 +16,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// Importantly, we then return from the handler. If we don't return the handler would
 	// keep executing and also write the "Hello from SnippetBox" message
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		app.notFound(w) // use the notFound() helper
 		return
 	}
 
@@ -32,8 +32,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		// because the home handler function is now a method against application it can access its fields, including the error logger
-		app.errorLog.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// app.errorLog.Println(err.Error())
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.serverError(w, err)
 		return
 	}
 
@@ -43,8 +44,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	//use the ExecuteTemplate method to write tehe content of base template as response body
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// app.errorLog.Println(err.Error())
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.serverError(w, err)
 		return
 	}
 
@@ -57,7 +59,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// convert it to an interger using the strconv.Atoi() function. If it can't be converted to an integer, or the value is less than 1, we return a 404 page not fount response.
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		// http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
 	// use the fmt.Fprintf function to interpolate the id value with our response and write it to the http.ResponseWriter
@@ -88,7 +91,8 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 		//is the HTTP status code. In this case, we use 405 status code
 		//which means "Method Not Allowed"
 		//http.Error(w, "Method Not Allowed", 405)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		// http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
