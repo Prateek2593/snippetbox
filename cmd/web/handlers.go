@@ -1,10 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/Prateek2593/snippetbox/internal/models"
 )
 
 // define a home handler function which writes a byte slide containing
@@ -63,8 +66,23 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
+
+	// use the SnippetModel objects Get method to retrieve the data for a specific record based on its ID. if no matching recored is found, return a 404 not found response
+	snippet, err := app.snippets.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
 	// use the fmt.Fprintf function to interpolate the id value with our response and write it to the http.ResponseWriter
-	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+	// fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
+
+	// write the snippet data as a plain text HTTP response body
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 // Add a snippetCreate handler function
