@@ -21,7 +21,25 @@ type SnippetModel struct {
 
 // this will insert a new snippet into the database
 func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
-	return 0, nil
+
+	// writing the sql statement we want to execute. the reason why ? are used is that they indicate placeholder parameters for the data we want to insert, because the data will be provided by the untrusted user input from a form, its a good practice to use placeholder parameters instead of interpolating data in sql query
+	stmt := `INSERT INTO snippets (title, content,created, expires) VALUES (?,?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL?DAY))`
+
+	// DB.Exec() is used for statements which dont return rows(like INSERT and DELETE)
+	// use the Exec() method on the embedded connection pool to execute the statement. the first parameter is the sql sttement, followed by the title, content and expiry value for the placeholder parameter. this methods returns a sql.Result type, which contains some basic information about what happened whent the statement was executed
+	result, err := m.DB.Exec(stmt, title, content, expires)
+	if err != nil {
+		return 0, err
+	}
+
+	// use the LastInsertId() method on the result to get the ID of our newly inserted record in the snippets table
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	// the ID returned has the type int64, sw we convert it to an int type before returning
+	return int(id), nil
 }
 
 // this will return a specific snippet based on its id
