@@ -3,7 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
+
+	// "html/template"
 	"net/http"
 	"strconv"
 
@@ -23,35 +24,45 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	snippets, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	for _, snippet := range snippets {
+		fmt.Fprintf(w, "%+v\n", snippet)
+	}
+
 	// initialize a slice containing the paths to the tow files. its important to note that the file containing our base template must be the *first* file in the slice
-	files := []string{
+	/*files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl", // include navigation partial in template file
 		"./ui/html/pages/home.tmpl",
-	}
+	}*/
 
 	// use the template.ParseFile() function to read the template file into a template set. If there's an error, we log the detailed error message and use the http.Error() function to send a generic 500 internal server error response to the user
 	// notice that we can pass the slice of file paths as a variadic parameter
-	ts, err := template.ParseFiles(files...)
+	/*ts, err := template.ParseFiles(files...)
 	if err != nil {
 		// because the home handler function is now a method against application it can access its fields, including the error logger
 		// app.errorLog.Println(err.Error())
 		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.serverError(w, err)
 		return
-	}
+	}*/
 
 	// we then use the Execute() method on the template set to write the template content as the response body. the last parameter to Execute() represents the dynamic data that we want to pass in, which for now we'll leave as nil
 	//err = ts.Execute(w, nil)
 
 	//use the ExecuteTemplate method to write tehe content of base template as response body
-	err = ts.ExecuteTemplate(w, "base", nil)
+	/*err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
 		// app.errorLog.Println(err.Error())
 		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.serverError(w, err)
 		return
-	}
+	}*/
 
 	w.Write([]byte("Hello from Snippetbox!"))
 }

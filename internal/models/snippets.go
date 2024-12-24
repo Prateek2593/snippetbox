@@ -73,5 +73,41 @@ func (m *SnippetModel) Get(id int) (*Snippet, error) {
 
 // this will return the 10 most recently created snippet
 func (m *SnippetModel) Latest() ([]*Snippet, error) {
-	return nil, nil
+
+	//write the sql statement we want to execute
+	stmt := `SELECT id, title, content, created, expires FROM snippets
+	WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+
+	// use the Query() method on the connection pool to execute the query. this returns a sql.Rows resultset containing the result of our query
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	// we defer rows.Close() to ensure the sql.Rows resultset is always properlt closed before Latest() method returns. this defer statement should come *after* you check for an error from the Query() method. otherwise, if Query() returns an error, you'll get a panic trying to close a nil result set
+	defer rows.Close()
+
+	// initialize an empty slice of pointers to Snippet structs
+	snippets := []*Snippet{}
+
+	// use rows.Next to iterate through the rows in the resultset. this prepares the first (and then each subsequent) row to be acted on by the rows.Scan() method. if iteration over all the rows completes then the resultset automatically closes itself and frees up the underlying database connection.
+	for rows.Next() {
+		// create a pointer to a new zeroed snippet struct
+		s := &Snippet{}
+
+		// use rows.Scan() to copy the values from each field in the current row into the corresponding field in the Snippet struct. notice that the arguments to rows.Scan are *pointers* to the place you want to copy the data into, and the number of arguments must be exactly the same as the number of columns returned by the SELECT statement in the sql statement. if there's an error during this scan, we return the error immediately, so we don't continue scanning the
+		err := rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		if err != nil {
+			return nil, err
+		}
+		// append it to the slice of snippets
+		snippets = append(snippets, s)
+	}
+	// when the rows.Next() loop has finished, we call rows.Err() to retrieve any error that was encountered during the iteration, its important to call this - dont assume that a successful iteration was completed over the whole resultset
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// if everything went well, return the slice of pointers to Snippet structs
+	return snippets, nil
 }
