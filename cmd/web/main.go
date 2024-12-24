@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Prateek2593/snippetbox/internal/models"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -14,6 +15,8 @@ import (
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	// add a snippets field to the application struct. this will allow us to make the SnippetModel object available to our handlers
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -46,6 +49,8 @@ func main() {
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
+		// initialize a models.SnippetModel instance and add it to the application dependencies
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before
