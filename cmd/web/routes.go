@@ -20,5 +20,6 @@ func (app *application) routes() http.Handler {
 
 	// pass the servermux as the 'next' parameter to the secureHeaders middleware. because secureHeaders is just a function and the function returns a http.Handler we dont need to do anything else
 	// wrap the existing chain with logRequest middleware
-	return app.logRequest(secureHeaders(mux))
+	// wrap the existing chain with recoverPanic middleware
+	return app.recoverPanic(app.logRequest(secureHeaders(mux)))
 }
