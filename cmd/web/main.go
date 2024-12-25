@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -12,11 +13,13 @@ import (
 )
 
 // define an application struct to hold the application wide dependencies for the web application. for now we'll only include fields for the two custom loggers, but we'll add more to it as the build progress
+// add a templateCache field to application struct
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	// add a snippets field to the application struct. this will allow us to make the SnippetModel object available to our handlers
-	snippets *models.SnippetModel
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -45,12 +48,19 @@ func main() {
 	// we also defer a call to db.Close(), so that the connection pool is closed before main function exits
 	defer db.Close()
 
+	// initialize a new template cache
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	// create a new instance of our application struct with the custom loggers
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
 		// initialize a models.SnippetModel instance and add it to the application dependencies
-		snippets: &models.SnippetModel{DB: db},
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache, // add it to application dependencies
 	}
 
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before

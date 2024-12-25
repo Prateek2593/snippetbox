@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -30,7 +29,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// initialize a slice containing the paths to the tow files. its important to note that the file containing our base template must be the *first* file in the slice
-	files := []string{
+	/*files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl", // include navigation partial in template file
 		"./ui/html/pages/home.tmpl",
@@ -61,7 +60,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		app.serverError(w, err)
 	}
+	*/
 
+	app.render(w, http.StatusOK, "home.tmpl", &templateData{
+		Snippets: snippets,
+	})
 	// w.Write([]byte("Hello from Snippetbox!"))
 }
 
@@ -88,7 +91,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// initialize a slice containing the paths to the view.tmpl file, plus the base layout and navigation partial that we made earlier
-	files := []string{
+	/*files := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl", // include navigation partial in template file
 		"./ui/html/pages/view.tmpl",
@@ -118,6 +121,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// write the snippet data as a plain text HTTP response body
 	// pass in templateData struct when executing the template
 	fmt.Fprintf(w, "%+v", data)
+	*/
+
+	app.render(w, http.StatusOK, "view.tmpl", &templateData{
+		Snippet: snippet,
+	})
 }
 
 // Add a snippetCreate handler function
