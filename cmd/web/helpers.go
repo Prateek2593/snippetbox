@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 // the serverError helper writes an error message and stack trace to the errorLog, then sends a generic 500 Internal Server Error response to user
@@ -56,4 +57,10 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	// write the contents of the buffer to http.ResponseWriter, note:this is another time where we pass out http.ResponseWriter to a function that takes an io.Writer.
 	buf.WriteTo(w)
 
+}
+
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }

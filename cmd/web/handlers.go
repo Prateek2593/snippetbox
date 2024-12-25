@@ -62,9 +62,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 	*/
 
-	app.render(w, http.StatusOK, "home.tmpl", &templateData{
-		Snippets: snippets,
-	})
+	// call the newTemplateData() helper to get a templateData struct containing the 'default' data(which for now is just the current year) and add the snippet slice to it
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+
+	// pass the data to render() as normal
+	app.render(w, http.StatusOK, "home.tmpl", data)
 	// w.Write([]byte("Hello from Snippetbox!"))
 }
 
@@ -123,9 +126,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%+v", data)
 	*/
 
-	app.render(w, http.StatusOK, "view.tmpl", &templateData{
-		Snippet: snippet,
-	})
+	// call the newTemplateData() helper to get a templateData struct containing the 'default' data(which for now is just the current year) and add the snippet slice to it
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+
+	// pass the data to render() as normal
+	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 // Add a snippetCreate handler function
