@@ -2,8 +2,9 @@ package main
 
 import "net/http"
 
-// the routes() method returns a servemux containing uor application routes
-func (app *application) routes() *http.ServeMux {
+// the routes() method returns a servemux containing our application routes
+// update the signature for the routes() method so that it returns a http.Handler instead of *http.ServeMux
+func (app *application) routes() http.Handler {
 	// Use the http.NewServeMux() function to initialize a new servemux, then register the home handler function at the root ("/") path.
 	mux := http.NewServeMux()
 
@@ -17,5 +18,6 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	return mux
+	// pass the servermux as the 'next' parameter to the secureHeaders middleware. because secureHeaders is just a function and the function returns a http.Handler we dont need to do anything else
+	return secureHeaders(mux)
 }
