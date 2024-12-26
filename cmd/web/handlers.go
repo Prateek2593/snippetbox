@@ -173,10 +173,24 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 			return
 		}
 	*/
-	// creates some variables holding dummy data
-	title := "0 snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
+
+	// first we call the r.ParseForm() which adds any data in POST request bodies to the r.PostForm map. this also workds in same way for PUT and PATCH requests. if there are any errors, we use our clientError helper to send a 400 bad request response to user
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// use the r.PostForm.Get() method to retrieve the title and content from the r.PostForm map
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+
+	// the r.PostForm.Get() method always returns the form data as a string. however we are expecting our expires value to be a number, and want to represent it in out go code as an integer. so we need to manually convert the form data to an integer using strcov.Atoi, and we send a 400 bad request if conversion fails
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
@@ -184,5 +198,5 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippets/view/%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
