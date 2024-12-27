@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/Prateek2593/snippetbox/internal/models"
 	"github.com/julienschmidt/httprouter"
@@ -189,6 +191,32 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// initialize a map to hold any validation errors for the form fields
+	fieldErrors := make(map[string]string)
+
+	// chech that the title value is not blank and is not more than 100 characters long, if it fails either of those checks add a message to errors map using the field name as the key
+	if strings.TrimSpace(title) == "" {
+		fieldErrors["title"] = "This field cannot be empty"
+	} else if utf8.RuneCountInString(title) > 100 {
+		fieldErrors["title"] = "This field cannot be more than 100 characters long"
+	}
+
+	// check that the content value isnt blank
+	if strings.TrimSpace(content) == "" {
+		fieldErrors["content"] = "This field cannot be empty"
+	}
+
+	// check the expires value matches one of the permitted values(1,7,365)
+	if expires != 1 && expires != 7 && expires != 365 {
+		fieldErrors["expires"] = "This field must be equal 1,7, or 365"
+	}
+
+	// if there are any errors, dump them in a plain text HTTP response and return from handler
+	if len(fieldErrors) > 0 {
+		fmt.Fprint(w, fieldErrors)
 		return
 	}
 
