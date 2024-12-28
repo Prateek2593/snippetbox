@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/Prateek2593/snippetbox/internal/models"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -20,6 +21,7 @@ type application struct {
 	// add a snippets field to the application struct. this will allow us to make the SnippetModel object available to our handlers
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder // add a formDecoder field to hold a pointer to a form.Decoder instance
 }
 
 func main() {
@@ -54,6 +56,9 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	// initialize a decoder instance
+	formDecoder := form.NewDecoder()
+
 	// create a new instance of our application struct with the custom loggers
 	app := &application{
 		errorLog: errorLog,
@@ -61,6 +66,7 @@ func main() {
 		// initialize a models.SnippetModel instance and add it to the application dependencies
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache, // add it to application dependencies
+		formDecoder:   formDecoder,   // add it to application dependencies,
 	}
 
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before

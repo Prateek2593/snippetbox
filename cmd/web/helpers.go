@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 // the serverError helper writes an error message and stack trace to the errorLog, then sends a generic 500 Internal Server Error response to user
@@ -63,4 +66,26 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CurrentYear: time.Now().Year(),
 	}
+}
+
+// create a new decodePostForm() helper method. the second parameter here, dst, is the target destination that we want to decode the form data into
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	// call the ParseForm method on the request, in the same way that we did in our createSnippetPost handler
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	// call the Decode method instance, passing the target destination as the first argument
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		// if we try to use an invalid destination, the decode() method will return an error with the type *form.InvalidDecoderError. we use the errors.As() to check for this and raise a panic rather then returning an error
+		var invalidDecoderError *form.InvalidDecoderError
+		if errors.As(err, &invalidDecoderError) {
+			panic(err)
+		}
+		// for other errors we return them as normal
+		return err
+	}
+	return nil
 }

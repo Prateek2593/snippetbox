@@ -155,12 +155,13 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // remove the explicit FieldErrors struct field and instead embed the Validator type, embedding this means that out snippetCreateForm "inherits" all the fields and methods of our Validator type
+// update our snippetCreateForm struct to include struct tags which tell the decoder how to map HTML form values into different struct fields.
 type snippetCreateForm struct {
-	Title   string
-	Content string
-	Expires int
+	Title   string `form:"title"`
+	Content string `form:"content"`
+	Expires int    `form:"expires"`
 	// FieldErrors map[string]string
-	validator.Validator
+	validator.Validator `form:"-"` // "-" tells decoder to completely ignore a field during decoding
 }
 
 // Add a snippetCreate handler function
@@ -189,30 +190,31 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	*/
 
 	// first we call the r.ParseForm() which adds any data in POST request bodies to the r.PostForm map. this also workds in same way for PUT and PATCH requests. if there are any errors, we use our clientError helper to send a 400 bad request response to user
-	err := r.ParseForm()
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
+	// err := r.ParseForm()
+	// if err != nil {
+	// 	app.clientError(w, http.StatusBadRequest)
+	// 	return
+	// }
 
 	// use the r.PostForm.Get() method to retrieve the title and content from the r.PostForm map
 	// title := r.PostForm.Get("title")
 	// content := r.PostForm.Get("content")
 
 	// the r.PostForm.Get() method always returns the form data as a string. however we are expecting our expires value to be a number, and want to represent it in out go code as an integer. so we need to manually convert the form data to an integer using strcov.Atoi, and we send a 400 bad request if conversion fails
-	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
+	/*
+		expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+		if err != nil {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
 
-	form := snippetCreateForm{
-		Title:   r.PostForm.Get("title"),
-		Content: r.PostForm.Get("content"),
-		Expires: expires,
-		// FieldErrors: map[string]string{},
-	}
-
+		form := snippetCreateForm{
+			Title:   r.PostForm.Get("title"),
+			Content: r.PostForm.Get("content"),
+			Expires: expires,
+			// FieldErrors: map[string]string{},
+		}
+	*/
 	// initialize a map to hold any validation errors for the form fields
 	// fieldErrors := make(map[string]string)
 
@@ -242,6 +244,22 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 			return
 		}
 	*/
+
+	// declare a new empty instance of snippetCreateForm struct
+	var form snippetCreateForm
+
+	// call the Decode() method on the form decoder, passing in the current request and a pointer to our snippetCreateForm struct. this will essentially fill our struct with the relevant data from the HTML form. if there's a problem, we return a 400 Bad Request error
+	// err = app.formDecoder.Decode(&form, r.PostForm)
+	// if err != nil {
+	// 	app.clientError(w, http.StatusBadRequest)
+	// 	return
+	// }
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	// because the Validator type is embedded by the snippetCreateForm struct, we can call checkField() directly on it to execute our validation checks. checkField() will add the provided key and error message to the FieldErrors map if the check does not evaluate to true.
 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
