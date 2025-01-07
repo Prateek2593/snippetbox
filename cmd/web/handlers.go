@@ -136,14 +136,14 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	// use the PopString() method to retrieve the value for the "flash" key. PopString also deletes the key and the value from session data, so it acts like a one time fetch. if there is no matching key in session data this will return the empty string
-	flash := app.sessionManager.PopString(r.Context(), "flash")
+	// flash := app.sessionManager.PopString(r.Context(), "flash")
 
 	// call the newTemplateData() helper to get a templateData struct containing the 'default' data(which for now is just the current year) and add the snippet slice to it
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
 
 	// pass the flash data to the template
-	data.Flash = flash
+	// data.Flash = flash
 
 	// pass the data to render() as normal
 	app.render(w, http.StatusOK, "view.tmpl", data)
