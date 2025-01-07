@@ -34,11 +34,15 @@ func (app *application) routes() http.Handler {
 	// mux.HandleFunc("/snippet/view", app.snippetView)
 	// mux.HandleFunc("/snippet/create", app.snippetCreate)
 
+	// create a new middleware chaing containing the middleware specific to our dynamic application routes.
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
+
 	// and then create routes using the appropriate methods, patterns and handlers
-	router.HandlerFunc(http.MethodGet, "/", app.home)
-	router.HandlerFunc(http.MethodGet, "/snippet/view/:id", app.snippetView)
-	router.HandlerFunc(http.MethodGet, "/snippet/create", app.snippetCreate)
-	router.HandlerFunc(http.MethodPost, "/snippet/create", app.snippetCreatePost)
+	// update these routes to use the dynamic middleware chain followed by the appropriate handler function. note that because the alice ThenFunc() method returns a http.Handler(rather than a http.HandlerFunc) we also need to switch to registering the route using router.Handler method
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
+	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
 	// create a middleware chain containing our standard middlewares which will be used for every request our application receives
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)

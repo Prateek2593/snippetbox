@@ -7,8 +7,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/Prateek2593/snippetbox/internal/models"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,9 +22,10 @@ type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	// add a snippets field to the application struct. this will allow us to make the SnippetModel object available to our handlers
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder // add a formDecoder field to hold a pointer to a form.Decoder instance
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder       // add a formDecoder field to hold a pointer to a form.Decoder instance
+	sessionManager *scs.SessionManager // add a sessionManager field to hold a pointer to a session
 }
 
 func main() {
@@ -59,14 +63,20 @@ func main() {
 	// initialize a decoder instance
 	formDecoder := form.NewDecoder()
 
+	// use scs.New() to initialize a new session manager. then we configure it to use our mysql db as the session store, and set a lifetime of 12 hours
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	// create a new instance of our application struct with the custom loggers
 	app := &application{
 		errorLog: errorLog,
 		infoLog:  infoLog,
 		// initialize a models.SnippetModel instance and add it to the application dependencies
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache, // add it to application dependencies
-		formDecoder:   formDecoder,   // add it to application dependencies,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,  // add it to application dependencies
+		formDecoder:    formDecoder,    // add it to application dependencies,
+		sessionManager: sessionManager, // add it to application dependencies
 	}
 
 	// initialize a new http.Server struct. we set the addr and handler fields so that the server uses the same network address and routes as before
