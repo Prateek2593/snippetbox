@@ -23,6 +23,7 @@ type application struct {
 	infoLog  *log.Logger
 	// add a snippets field to the application struct. this will allow us to make the SnippetModel object available to our handlers
 	snippets       *models.SnippetModel
+	users          *models.UserModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder       // add a formDecoder field to hold a pointer to a form.Decoder instance
 	sessionManager *scs.SessionManager // add a sessionManager field to hold a pointer to a session
@@ -74,6 +75,7 @@ func main() {
 		infoLog:  infoLog,
 		// initialize a models.SnippetModel instance and add it to the application dependencies
 		snippets:       &models.SnippetModel{DB: db},
+		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,  // add it to application dependencies
 		formDecoder:    formDecoder,    // add it to application dependencies,
 		sessionManager: sessionManager, // add it to application dependencies
