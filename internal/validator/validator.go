@@ -1,9 +1,13 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
+
+// use the regexp.MustCompile function to parse a regular expression pattern for sanity checking the format of an email address. this returns a pointer to a compiled regexp.Regexp type, or panics in the event of an error. parsing this pattern once at startup and stroing the compiled *regexp.Regexp in a variable is more preformant than reparsing the pattern each time we need
+var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)")
 
 // define a new validator type which contains a map of validation errors for our form fields
 type Validator struct {
@@ -52,4 +56,12 @@ func PermittedInt(value int, permittedValues ...int) bool {
 		}
 	}
 	return false
+}
+
+func MinChars(value string, n int) bool {
+	return utf8.RuneCountInString(value) >= n
+}
+
+func Matches(value string, rx *regexp.Regexp) bool {
+	return rx.MatchString(value)
 }
