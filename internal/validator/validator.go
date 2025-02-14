@@ -10,13 +10,21 @@ import (
 var EmailRX = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)")
 
 // define a new validator type which contains a map of validation errors for our form fields
+// add a new NonFieldErrors []string field to the struct, which we will use to hold any validation errors which are not related to a specific form field
 type Validator struct {
-	FieldErrors map[string]string
+	NonFieldErrors []string
+	FieldErrors    map[string]string
 }
 
 // Valid() erturns true if the FieldErrors map doesnt contain ant entries
+// update the valid() method to also check that the NonFieldErrors slice is empty
 func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
+}
+
+// create a AddNonFieldErrors helper for adding error mesaages to the new NonFieldErrors slice
+func (v *Validator) AddNonFieldErrors(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }
 
 // AddFieldError() adds and error message to the FieldErrors mao(so long as no entru already exists for the given key)
