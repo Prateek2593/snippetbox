@@ -35,20 +35,23 @@ func (app *application) routes() http.Handler {
 	// mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// create a new middleware chaing containing the middleware specific to our dynamic application routes.
+	// unprotected application routes using the dynamic middleware chain
 	dynamic := alice.New(app.sessionManager.LoadAndSave)
 
 	// and then create routes using the appropriate methods, patterns and handlers
 	// update these routes to use the dynamic middleware chain followed by the appropriate handler function. note that because the alice ThenFunc() method returns a http.Handler(rather than a http.HandlerFunc) we also need to switch to registering the route using router.Handler method
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
-	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
-	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
-
 	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.userSignup))
 	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.userSignupPost))
 	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.userLogin))
 	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.userLoginPost))
-	router.Handler(http.MethodPost, "/user/logout", dynamic.ThenFunc(app.userLogoutPost))
+
+	// protected(authenticated-only) application routes, using a new "protected" middleware chain which includes the requireAuthentication middleware
+	protected := dynamic.Append(app.requireAuthentication)
+	router.Handler(http.MethodGet, "/snippet/create", protected.ThenFunc(app.snippetCreate))
+	router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
+	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
 
 	// create a middleware chain containing our standard middlewares which will be used for every request our application receives
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)

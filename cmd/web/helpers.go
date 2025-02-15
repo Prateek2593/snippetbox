@@ -67,6 +67,8 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		CurrentYear: time.Now().Year(),
 		// add the flash message to template data if exists
 		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		// add the authentication status to template data if exists
+		isAuthenticated: app.isAuthenticated(r),
 	}
 }
 
@@ -90,4 +92,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 		return err
 	}
 	return nil
+}
+
+// return true if the current request is from an authenticated user, otherwise return false
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
 }
