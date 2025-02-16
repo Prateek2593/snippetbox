@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 // the serverError helper writes an error message and stack trace to the errorLog, then sends a generic 500 Internal Server Error response to user
@@ -69,6 +70,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		Flash: app.sessionManager.PopString(r.Context(), "flash"),
 		// add the authentication status to template data if exists
 		IsAuthenticated: app.IsAuthenticated(r),
+		CSRFToken:       nosurf.Token(r), // add the CSRFToken to template data
 	}
 }
 

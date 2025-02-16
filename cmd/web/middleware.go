@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
 )
 
 func secureHeaders(next http.Handler) http.Handler {
@@ -55,4 +57,15 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		// and call the next handler in chain
 		next.ServeHTTP(w, r)
 	})
+}
+
+// Create a NoSurf Middleware function which uses a customized CSRF cookie with secure, path and HttpOnly attribures set
+func noSurf(next http.Handler) http.Handler {
+	csrfHandler := nosurf.New(next)
+	csrfHandler.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+	})
+	return csrfHandler
 }
